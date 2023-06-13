@@ -5,17 +5,47 @@ format: pdf
 ---
 
 # Introduction
-``` 
-This section includes an introduction to the project motivation, data, and research question. Describe the data and definitions of key variables. It should also include some exploratory data analysis. All of the EDA won’t fit in the paper, so focus on the EDA for the response variable and a few other interesting variables and relationships.
 
-The research question and motivation are clearly stated in the introduction, including citations for the data source and any external research. The data are clearly described, including a description about how the data were originally collected and a concise definition of the variables relevant to understanding the report. The data cleaning process is clearly described, including any decisions made in the process (e.g., creating new variables, removing observations, etc.) The explanatory data analysis helps the reader better understand the observations in the data along with interesting and relevant relationships between the variables. It incorporates appropriate visualizations and summary statistics.
-```
+    This section includes an introduction to the project motivation, data, and research question. Describe the data and definitions of key variables. It should also include some exploratory data analysis. All of the EDA won’t fit in the paper, so focus on the EDA for the response variable and a few other interesting variables and relationships.
 
-The primary goal of this project is to best predict whether or not a mushroom is poisonous depending on various physical attributes, rarity, and habitat of the fungus.
+    The research question and motivation are clearly stated in the introduction, including citations for the data source and any external research. The data are clearly described, including a description about how the data were originally collected and a concise definition of the variables relevant to understanding the report. The data cleaning process is clearly described, including any decisions made in the process (e.g., creating new variables, removing observations, etc.) The explanatory data analysis helps the reader better understand the observations in the data along with interesting and relevant relationships between the variables. It incorporates appropriate visualizations and summary statistics.
 
+The primary goal of this project is to best predict whether or not a mushroom is poisonous depending on various physical characteristics, rarity, and habitat of the fungus. The data set consists of 8124 hypothetical samples, constructed from the Audobon Society Field Guide. The samples correspond to 23 species of mushrooms from the Agaricus and Lepiota Families. Each mushroom is categorized as either poisonous or edible, with mushrooms 'not reccomended for eating' or of unknown edibility are counted as poisonous. Though the observations are hypothetical mushrooms, analyzing them can still provide beneficial results that can be applied to help identify the edibility of the near 14,000 existing species of mushrooms.
 
-*Citations*
-Mushroom. (1987). UCI Machine Learning Repository. https://doi.org/10.24432/C5959T.
+     1. cap-shape:                bell=b,conical=c,convex=x,flat=f, knobbed=k,sunken=s
+     2. cap-surface:              fibrous=f,grooves=g,scaly=y,smooth=s
+     3. cap-color:                brown=n,buff=b,cinnamon=c,gray=g,green=r,   
+                                  pink=p,purple=u,red=e,white=w,yellow=y
+                                  
+     4. bruises?:                 bruises=t,no=f
+     5. odor:                     almond=a,anise=l,creosote=c,fishy=y,foul=f,
+                                  musty=m,none=n,pungent=p,spicy=s
+                                  
+     6. gill-attachment:          attached=a,descending=d,free=f,notched=n
+     7. gill-spacing:             close=c,crowded=w,distant=d
+     8. gill-size:                broad=b,narrow=n
+     9. gill-color:               black=k,brown=n,buff=b,chocolate=h,gray=g,
+                                  green=r,orange=o,pink=p,purple=u,red=e, white=w,yellow=y
+                                  
+    10. stalk-shape:              enlarging=e,tapering=t
+    11. stalk-root:               bulbous=b,club=c,cup=u,equal=e, rhizomorphs=z,rooted=r,missing=?
+    12. stalk-surface-above-ring: fibrous=f,scaly=y,silky=k,smooth=s
+    13. stalk-surface-below-ring: fibrous=f,scaly=y,silky=k,smooth=s
+    14. stalk-color-above-ring:   brown=n,buff=b,cinnamon=c,gray=g,orange=o,
+                                  pink=p,red=e,white=w,yellow=y
+    15. stalk-color-below-ring:   brown=n,buff=b,cinnamon=c,gray=g,orange=o,
+                                  pink=p,red=e,white=w,yellow=y
+    16. veil-type:                partial=p,universal=u
+    17. veil-color:               brown=n,orange=o,white=w,yellow=y
+    18. ring-number:              none=n,one=o,two=t
+    19. ring-type:                cobwebby=c,evanescent=e,flaring=f,large=l,
+                                  none=n,pendant=p,sheathing=s,zone=z
+    20. spore-print-color:        black=k,brown=n,buff=b,chocolate=h,green=r,
+                                  orange=o,purple=u,white=w,yellow=y
+    21. population:               abundant=a,clustered=c,numerous=n, scattered=s,several=v,solitary=y
+    22. habitat:                  grasses=g,leaves=l,meadows=m,paths=p, urban=u,waste=w,woods=d
+
+*Citations* Mushroom. (1987). UCI Machine Learning Repository. https://doi.org/10.24432/C5959T.
 
 ```{r read-data, warning = F, message = F}
 
