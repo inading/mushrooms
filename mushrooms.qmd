@@ -47,10 +47,73 @@ The primary goal of this project is to best predict whether or not a mushroom is
 
 *Citations* Mushroom. (1987). UCI Machine Learning Repository. https://doi.org/10.24432/C5959T.
 
+```{r install-packages, warning = F, message = F}
+
+install.packages("leaps")
+
+```
+
+
 ```{r read-data, warning = F, message = F}
 
 mushrooms <- read.csv("Mushrooms - Sheet1.csv")
 library(tidymodels)
 library(tidyverse)
+library(leaps)
+library(glmnet)
+
+```
+
+
+
+```{r all-subset-selection, message = F, warning = F}
+
+no_veil <- subset(mushrooms, select = -c(veil))
+sapply(lapply(no_veil, unique), length)
+
+no_veil$poisonous[no_veil$poisonous == 'p'] <- 1
+no_veil$poisonous[no_veil$poisonous == 'e'] <- 0
+
+no_veil$poisonous <- as.numeric(as.character(no_veil$poisonous))
+
+##m1 <- glm(poisonous ~ ., 
+         ## data = no_veil,
+         ## family = "binomial")
+##summary(m1)
+
+m_all <- regsubsets(poisonous ~ .,
+                  data = no_veil, 
+                  nbest = 1, nvmax = 5, really.big=T)
+m_all
+
+
+
+```
+
+```{r, warning = F, message = F}
+summary(m_all)$which
+summary(m_all)$rsq
+
+
+```
+
+```{r, message = F, warning = F}
+install.packages("glmnet")
+```
+
+```{r, warning = F, message = F}
+
+library(glmnet)
+
+y <- no_veil$poisonous
+x <- model.matrix(poisonous ~ .,
+                  data = no_veil)
+
+m_lasso_cv <- cv.glmnet(x, y, alpha = 1)
+best_lambda <- m_lasso_cv$lambda.min
+best_lambda
+
+m_best <- glmnet(x, y, alpha = 1, lambda = best_lambda)
+m_best$beta
 
 ```
