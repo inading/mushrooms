@@ -1,0 +1,26 @@
+---
+title: "Mushrooms"
+author: "Ina Ding"
+format: pdf
+---
+
+# Introduction
+``` 
+This section includes an introduction to the project motivation, data, and research question. Describe the data and definitions of key variables. It should also include some exploratory data analysis. All of the EDA won’t fit in the paper, so focus on the EDA for the response variable and a few other interesting variables and relationships.
+
+The research question and motivation are clearly stated in the introduction, including citations for the data source and any external research. The data are clearly described, including a description about how the data were originally collected and a concise definition of the variables relevant to understanding the report. The data cleaning process is clearly described, including any decisions made in the process (e.g., creating new variables, removing observations, etc.) The explanatory data analysis helps the reader better understand the observations in the data along with interesting and relevant relationships between the variables. It incorporates appropriate visualizations and summary statistics.
+```
+
+The primary goal of this project is to best predict whether or not a mushroom is poisonous depending on various physical attributes, rarity, and habitat of the fungus.
+
+
+*Citations*
+Mushroom. (1987). UCI Machine Learning Repository. https://doi.org/10.24432/C5959T.
+
+```{r read-data, warning = F, message = F}
+
+mushrooms <- read.csv("Mushrooms - Sheet1.csv")
+library(tidymodels)
+library(tidyverse)
+
+```
