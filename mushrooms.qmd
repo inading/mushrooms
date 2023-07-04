@@ -69,7 +69,7 @@ library(glmnet)
 ```{r all-subset-selection, message = F, warning = F}
 
 no_veil <- subset(mushrooms, select = -c(veil))
-sapply(lapply(no_veil, unique), length)
+#sapply(lapply(no_veil, unique), length)
 
 no_veil$poisonous[no_veil$poisonous == 'p'] <- 1
 no_veil$poisonous[no_veil$poisonous == 'e'] <- 0
@@ -81,18 +81,20 @@ no_veil$poisonous <- as.numeric(as.character(no_veil$poisonous))
          ## family = "binomial")
 ##summary(m1)
 
-m_all <- regsubsets(poisonous ~ .,
-                  data = no_veil, 
-                  nbest = 1, nvmax = 5, really.big=T)
-m_all
+#m_all <- regsubsets(poisonous ~ .,
+               #   data = no_veil, 
+               #   nbest = 1, nvmax = 5, really.big=T)
+#m_all
+
+#cart ... look up for classification tree model 
 
 
 
 ```
 
 ```{r, warning = F, message = F}
-summary(m_all)$which
-summary(m_all)$rsq
+
+m1 <- lm(poisonous ~ ., data = no_veil)
 
 
 ```
@@ -115,5 +117,24 @@ best_lambda
 
 m_best <- glmnet(x, y, alpha = 1, lambda = best_lambda)
 m_best$beta
+
+```
+
+
+```{r logit, warning = F, message = F}
+
+m2 <- glm(poisonous ~ ., 
+          data = no_veil,
+          family = "binomial")
+m2_aug<- augment(m2) %>% 
+  mutate(prob = exp(.fitted)/(1 + exp(.fitted)),
+         pred_pois = ifelse(prob > 0.5, "Poisonous", "Edible")) %>% 
+  select(.fitted, prob, pred_pois, poisonous)
+
+table(m2_aug$pred_pois)
+table(m2_aug$Poisonous)
+
+m1 <- lm(poisonous ~ ., data = no_veil)
+
 
 ```
