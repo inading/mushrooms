@@ -10,7 +10,7 @@ format: pdf
 
     The research question and motivation are clearly stated in the introduction, including citations for the data source and any external research. The data are clearly described, including a description about how the data were originally collected and a concise definition of the variables relevant to understanding the report. The data cleaning process is clearly described, including any decisions made in the process (e.g., creating new variables, removing observations, etc.) The explanatory data analysis helps the reader better understand the observations in the data along with interesting and relevant relationships between the variables. It incorporates appropriate visualizations and summary statistics.
 
-The primary goal of this project is to best predict whether or not a mushroom is poisonous depending on various physical characteristics, rarity, and habitat of the fungus. The data set consists of 8124 hypothetical samples, constructed from the Audobon Society Field Guide. The samples correspond to 23 species of mushrooms from the Agaricus and Lepiota Families. Each mushroom is categorized as either poisonous or edible, with mushrooms 'not reccomended for eating' or of unknown edibility are counted as poisonous. Though the observations are hypothetical mushrooms, analyzing them can still provide beneficial results that can be applied to help identify the edibility of the near 14,000 existing species of mushrooms.
+The primary goal of this project is to best predict whether or not a mushroom is poisonous depending on various physical characteristics, rarity, and habitat of the fungus. The data set consists of 8124 hypothetical samples, constructed from the Audobon Society Field Guide. The samples correspond to 23 species of mushrooms from the Agaricus and Lepiota Families. Each mushroom is categorized as either poisonous or edible, with mushrooms 'not reccomended for eating' or of unknown edibility counted as poisonous. Though the observations are hypothetical mushrooms, analyzing them can still provide beneficial results that can be applied to help identify the edibility of the near 14,000 existing species of mushrooms.
 
      1. cap-shape:                bell=b,conical=c,convex=x,flat=f, knobbed=k,sunken=s
      2. cap-surface:              fibrous=f,grooves=g,scaly=y,smooth=s
@@ -47,6 +47,15 @@ The primary goal of this project is to best predict whether or not a mushroom is
 
 *Citations* Mushroom. (1987). UCI Machine Learning Repository. https://doi.org/10.24432/C5959T.
 
+# Methodology
+This section includes a brief description of your modeling process. Explain the reasoning for the type of model you’re fitting, predictor variables considered for the model including any interactions. Additionally, show how you arrived at the final model by describing the model selection process, interactions considered, variable transformations (if needed), assessment of conditions and diagnostics, and any other relevant considerations that were part of the model fitting process.
+
+
+Because this data set only contains categorical variables and no one attribute appeared immediately more important in categorizing a mushroom as poisonous or not, we were interested in including all the variables as predictors in our model. After some experimentation with LASSO and  Some light data cleaning was done, including removing the veil-type variable because all mushrooms in the set had the same veil-type ('partial').
+
+The primary outcome of interest is whether or not a mushroom is poisonous or edible. Since this is a binary outcome (ambiguous or unknown edibilities were deemed poisonous in this data set) using a log-odds model seemed the most reasonable. 
+
+
 ```{r install-packages, warning = F, message = F}
 
 install.packages("leaps")
@@ -63,7 +72,6 @@ library(leaps)
 library(glmnet)
 
 ```
-
 
 
 ```{r all-subset-selection, message = F, warning = F}
@@ -95,7 +103,7 @@ no_veil$poisonous <- as.numeric(as.character(no_veil$poisonous))
 ```{r, warning = F, message = F}
 
 m1 <- lm(poisonous ~ ., data = no_veil)
-
+summary(m1)
 
 ```
 
@@ -126,15 +134,19 @@ m_best$beta
 m2 <- glm(poisonous ~ ., 
           data = no_veil,
           family = "binomial")
-m2_aug<- augment(m2) %>% 
+m2_aug <- augment(m2)
+
+
+
+```
+
+```{r, warning = F, message =F}
+
+m2_aug <- m2_aug %>% 
   mutate(prob = exp(.fitted)/(1 + exp(.fitted)),
          pred_pois = ifelse(prob > 0.5, "Poisonous", "Edible")) %>% 
   select(.fitted, prob, pred_pois, poisonous)
 
-table(m2_aug$pred_pois)
-table(m2_aug$Poisonous)
-
-m1 <- lm(poisonous ~ ., data = no_veil)
-
+table(m2_aug$pred_pois, m2_aug$poisonous)
 
 ```
