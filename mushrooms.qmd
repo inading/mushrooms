@@ -169,15 +169,20 @@ library(ISLR)
 
 no_veil$poisonous = as.factor(no_veil$poisonous)
 
+set.seed(234)
+train = sample(1:nrow(no_veil), 4512)
+no_veil.train=no_veil[train,]
+no_veil.test=no_veil[-train,]
+
+poison.test=no_veil[-train]
+
+#fit.tree = rpart(High ~ ., data=Carseats.train, method = "class", cp=0.008)
+#fit.tree
+
 ```
 
 
-set.seed(234)
-train = sample(1:nrow(Carseats.H), 200)
-Carseats.train=Carseats.H[train,]
-Carseats.test=Carseats.H[-train,]
 
-High.test=High[-train]
 
 
 
