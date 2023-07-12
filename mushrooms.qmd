@@ -51,9 +51,18 @@ The primary goal of this project is to best predict whether or not a mushroom is
 This section includes a brief description of your modeling process. Explain the reasoning for the type of model you’re fitting, predictor variables considered for the model including any interactions. Additionally, show how you arrived at the final model by describing the model selection process, interactions considered, variable transformations (if needed), assessment of conditions and diagnostics, and any other relevant considerations that were part of the model fitting process.
 
 
-Because this data set only contains categorical variables and no one attribute appeared immediately more important in categorizing a mushroom as poisonous or not, we were interested in including all the variables as predictors in our model. After some experimentation with LASSO and all subset variable selection models, there turned out to be so many variables and categories within each variable that it seemed better to just keep all variables in. Some light data cleaning was done, including removing the veil-type variable because all mushrooms in the set had the same veil-type ('partial').
+Because this data set only contains categorical variables and no one attribute appeared immediately more important in categorizing a mushroom as poisonous or not, we were interested in including all the variables as predictors in our model. After some experimentation with LASSO and all subset variable selection models, there turned out to be so many variables and categories within each variable that it seemed better to just keep all variables in. Some light data cleaning was done, mainly removing the veil-type variable because all mushrooms in the set had the same veil-type ('partial').
 
-The primary outcome of interest is whether or not a mushroom is poisonous or edible. Since this is a binary outcome (ambiguous or unknown edibilities were deemed poisonous in this data set) using a log-odds model seemed the most reasonable. 
+The primary outcome of interest is whether or not a mushroom is poisonous or edible. Since this is a binary outcome (ambiguous or unknown edibilities were deemed poisonous in this data set) using either a logistical regression model or classification tree seemed the most fitting.
+
+For creating and testing the classification tree, the original data set was split into two halves (one for training, and one for testing). With the training data set, multiple complexity parameter (cp) levels ranging from 0.01 to 0.0001 were tested. The cp level determines how "pruned" the classification tree is, where smaller cp levels render larger trees. cp levels between 0.04-0.07 seemed to render the most accurate classification trees, sensitivity of 0.48, specificity of  0.55, positive predictive value of 0.5, and negative predictive value of 0.53. Seeing as there are only two possible classifications, however, the outcomes of our classification tree are not all that better than just randomly categorizing a mushroom as poisonous or edible. 
+
+On the other hand, the log-odds model was able to predict mushroom edibility with 100% accuracy, and was the final model chosen. In terms of meeting assumptions, the notion of linearity does not really apply as all of our predictors are categorical. The independence assumption is also not necessarily met. While the exact process of which the hypothetical mushroom samples in the data set were created is unclear, we do know that the mushrooms were designed after 23 existing mushrooms. Based on this information, it is likely that mushrooms designed off of the same real mushroom likely have some similar attributes. Thus, there is reason to believe that the independence assumption is not met for the log-odds model. However, this violation of independence is not neccesarily a bad thing——the whole point of the model (to predict edibility) is based on the fact that similar mushrooms may have similar poisonous status', and it is likely that mushrooms based off the same mushroom will have the same poisonous/edible characteristic. No variable interactions or transformations were made in the final model. 
+
+# Results 
+This is where you will output the final model with any relevant model fit statistics. Describe the key results from the model. The goal is not to interpret every single variable in the model but rather to show that you are proficient in using the model output to address the research questions, using the interpretations to support your conclusions. Focus on the variables that help you answer the research question and that provide relevant context for the reader.
+
+
 
 
 ```{r install-packages, warning = F, message = F}
@@ -114,7 +123,7 @@ install.packages("glmnet")
 
 ```{r, warning = F, message = F}
 
-library(glmnet)
+#library(glmnet)
 
 y <- no_veil$poisonous
 x <- model.matrix(poisonous ~ .,
@@ -170,14 +179,31 @@ library(ISLR)
 no_veil$poisonous = as.factor(no_veil$poisonous)
 
 set.seed(234)
-train = sample(1:nrow(no_veil), 4512)
+train = sample(1:nrow(no_veil), 4062)
 no_veil.train=no_veil[train,]
 no_veil.test=no_veil[-train,]
 
-poison.test=no_veil[-train]
+poison.test=no_veil[-train,]
 
-#fit.tree = rpart(High ~ ., data=Carseats.train, method = "class", cp=0.008)
-#fit.tree
+fit.tree = rpart(poisonous ~ ., data=no_veil.train, method = "class", cp=0.04)
+
+rpart.plot(fit.tree)
+
+pred.tree = predict(fit.tree, poison.test, type = "class")
+
+m3 <- glm(poisonous ~ ., 
+          data = no_veil.train,
+          family = "binomial")
+m3_aug <- augment(m3)
+
+m3_aug <- m3_aug %>% 
+  mutate(prob = exp(.fitted)/(1 + exp(.fitted)),
+         pred_pois = ifelse(prob > 0.5, "Poisonous", "Edible")) %>% 
+  select(.fitted, prob, pred_pois, poisonous)
+
+table(pred.tree, m3_aug$poisonous)
+table(m3_aug$poisonous)
+
 
 ```
 
