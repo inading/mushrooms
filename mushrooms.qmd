@@ -6,11 +6,9 @@ format: pdf
 
 # Introduction
 
-    This section includes an introduction to the project motivation, data, and research question. Describe the data and definitions of key variables. It should also include some exploratory data analysis. All of the EDA won’t fit in the paper, so focus on the EDA for the response variable and a few other interesting variables and relationships.
-
-    The research question and motivation are clearly stated in the introduction, including citations for the data source and any external research. The data are clearly described, including a description about how the data were originally collected and a concise definition of the variables relevant to understanding the report. The data cleaning process is clearly described, including any decisions made in the process (e.g., creating new variables, removing observations, etc.) The explanatory data analysis helps the reader better understand the observations in the data along with interesting and relevant relationships between the variables. It incorporates appropriate visualizations and summary statistics.
-
 The primary goal of this project is to best predict whether or not a mushroom is poisonous depending on various physical characteristics, rarity, and habitat of the fungus. The data set consists of 8124 hypothetical samples, constructed from the Audobon Society Field Guide. The samples correspond to 23 species of mushrooms from the Agaricus and Lepiota Families. Each mushroom is categorized as either poisonous or edible, with mushrooms 'not reccomended for eating' or of unknown edibility counted as poisonous. Though the observations are hypothetical mushrooms, analyzing them can still provide beneficial results that can be applied to help identify the edibility of the near 14,000 existing species of mushrooms.
+
+Some light data cleaning was done, including just changing the "poisonous" variable from p/e to 1/0 for ease of fitting with models like logistic regression models. The veil-type variable was removed because all mushrooms in the data set had the same characteristic for this attribute. 
 
      1. cap-shape:                bell=b,conical=c,convex=x,flat=f, knobbed=k,sunken=s
      2. cap-surface:              fibrous=f,grooves=g,scaly=y,smooth=s
@@ -47,9 +45,53 @@ The primary goal of this project is to best predict whether or not a mushroom is
 
 *Citations* Mushroom. (1987). UCI Machine Learning Repository. https://doi.org/10.24432/C5959T.
 
-# Methodology
-This section includes a brief description of your modeling process. Explain the reasoning for the type of model you’re fitting, predictor variables considered for the model including any interactions. Additionally, show how you arrived at the final model by describing the model selection process, interactions considered, variable transformations (if needed), assessment of conditions and diagnostics, and any other relevant considerations that were part of the model fitting process.
+```{r eda, warning = F, message = F}
 
+library(ggplot2)
+mushrooms <- read.csv("Mushrooms - Sheet1.csv")
+no_veil <- subset(mushrooms, select = -c(veil))
+no_veil$poisonous[no_veil$poisonous == 'p'] <- 1
+no_veil$poisonous[no_veil$poisonous == 'e'] <- 0
+
+no_veil$poisonous <- as.numeric((no_veil$poisonous))
+
+tbl <- with(no_veil, table(bruises, poisonous))
+
+ggplot(as.data.frame(tbl), aes(factor(poisonous), Freq, fill = bruises)) +     
+  geom_col(position = 'dodge')
+
+tbl2 <- with(no_veil, table(odor, poisonous))
+
+ggplot(as.data.frame(tbl2), aes(factor(poisonous), Freq, fill = odor)) +     
+  geom_col(position = 'dodge')
+
+tbl3 <- with(no_veil, table(gill.spacing, poisonous))
+
+ggplot(as.data.frame(tbl3), aes(factor(poisonous), Freq, fill = gill.spacing)) +     
+  geom_col(position = 'dodge')
+
+tbl4 <- with(no_veil, table(gill.size, poisonous))
+
+ggplot(as.data.frame(tbl4), aes(factor(poisonous), Freq, fill = gill.size)) +     
+  geom_col(position = 'dodge')
+
+tbl5 <- with(no_veil, table(gill.color, poisonous))
+
+ggplot(as.data.frame(tbl5), aes(factor(poisonous), Freq, fill = gill.color)) +     
+  geom_col(position = 'dodge')
+
+tbl6 <- with(no_veil, table(ss.above, poisonous))
+
+ggplot(as.data.frame(tbl6), aes(factor(poisonous), Freq, fill = ss.above)) +     
+  geom_col(position = 'dodge')
+
+tbl7 <- with(no_veil, table(spore.color, poisonous))
+
+ggplot(as.data.frame(tbl7), aes(factor(poisonous), Freq, fill = spore.color)) +     
+  geom_col(position = 'dodge')
+```
+
+# Methodology
 
 Because this data set only contains categorical variables and no one attribute appeared immediately more important in categorizing a mushroom as poisonous or not, we were interested in including all the variables as predictors in our model. After some experimentation with LASSO and all subset variable selection models, there turned out to be so many variables and categories within each variable that it seemed better to just keep all variables in. Some light data cleaning was done, mainly removing the veil-type variable because all mushrooms in the set had the same veil-type ('partial').
 
@@ -60,81 +102,18 @@ For creating and testing the classification tree, the original data set was spli
 On the other hand, the log-odds model was able to predict mushroom edibility with 100% accuracy, and was the final model chosen. In terms of meeting assumptions, the notion of linearity does not really apply as all of our predictors are categorical. The independence assumption is also not necessarily met. While the exact process of which the hypothetical mushroom samples in the data set were created is unclear, we do know that the mushrooms were designed after 23 existing mushrooms. Based on this information, it is likely that mushrooms designed off of the same real mushroom likely have some similar attributes. Thus, there is reason to believe that the independence assumption is not met for the log-odds model. However, this violation of independence is not neccesarily a bad thing——the whole point of the model (to predict edibility) is based on the fact that similar mushrooms may have similar poisonous status', and it is likely that mushrooms based off the same mushroom will have the same poisonous/edible characteristic. No variable interactions or transformations were made in the final model. 
 
 # Results 
-This is where you will output the final model with any relevant model fit statistics. Describe the key results from the model. The goal is not to interpret every single variable in the model but rather to show that you are proficient in using the model output to address the research questions, using the interpretations to support your conclusions. Focus on the variables that help you answer the research question and that provide relevant context for the reader.
 
-
-
-
-```{r install-packages, warning = F, message = F}
-
-install.packages("leaps")
-
-```
-
+The following is our final logistical regression model that uses all variables in the data set as predictors (besides the veil-type variable, which as mentioned all mushrooms had the same characteristic for). 
 
 ```{r read-data, warning = F, message = F}
 
-mushrooms <- read.csv("Mushrooms - Sheet1.csv")
-no_veil <- subset(mushrooms, select = -c(veil))
+
 library(tidymodels)
 library(tidyverse)
 library(leaps)
 library(glmnet)
 
-```
 
-
-```{r all-subset-selection, message = F, warning = F}
-
-
-#sapply(lapply(no_veil, unique), length)
-
-no_veil$poisonous[no_veil$poisonous == 'p'] <- 1
-no_veil$poisonous[no_veil$poisonous == 'e'] <- 0
-
-no_veil$poisonous <- as.numeric(as.character(no_veil$poisonous))
-
-##m1 <- glm(poisonous ~ ., 
-         ## data = no_veil,
-         ## family = "binomial")
-##summary(m1)
-
-#m_all <- regsubsets(poisonous ~ .,
-               #   data = no_veil, 
-               #   nbest = 1, nvmax = 5, really.big=T)
-#m_all
-
-#cart ... look up for classification tree model 
-
-
-
-```
-
-```{r, warning = F, message = F}
-
-m1 <- lm(poisonous ~ ., data = no_veil)
-summary(m1)
-
-```
-
-```{r, message = F, warning = F}
-install.packages("glmnet")
-```
-
-```{r, warning = F, message = F}
-
-#library(glmnet)
-
-y <- no_veil$poisonous
-x <- model.matrix(poisonous ~ .,
-                  data = no_veil)
-
-m_lasso_cv <- cv.glmnet(x, y, alpha = 1)
-best_lambda <- m_lasso_cv$lambda.min
-best_lambda
-
-m_best <- glmnet(x, y, alpha = 1, lambda = best_lambda)
-m_best$beta
 
 ```
 
@@ -146,12 +125,6 @@ m2 <- glm(poisonous ~ .,
           family = "binomial")
 m2_aug <- augment(m2)
 
-
-
-```
-
-```{r, warning = F, message =F}
-
 m2_aug <- m2_aug %>% 
   mutate(prob = exp(.fitted)/(1 + exp(.fitted)),
          pred_pois = ifelse(prob > 0.5, "Poisonous", "Edible")) %>% 
@@ -159,53 +132,34 @@ m2_aug <- m2_aug %>%
 
 table(m2_aug$pred_pois, m2_aug$poisonous)
 
-```
-
-```{r}
-
-install.packages("rpart.plot")
-install.packages("ISLR")
 
 ```
+```{r roc-curve, warning = F, message = F}
 
+m2_aug %>% 
+  roc_curve(
+    truth = as.factor(poisonous),
+    prob, 
+    event_level = "second"
+  ) %>% 
+  autoplot()
 
-```{r classification tree, warning =F, message = F}
-
-
-library(rpart)
-library(rpart.plot)
-library(ISLR)
-
-no_veil$poisonous = as.factor(no_veil$poisonous)
-
-set.seed(234)
-train = sample(1:nrow(no_veil), 4062)
-no_veil.train=no_veil[train,]
-no_veil.test=no_veil[-train,]
-
-poison.test=no_veil[-train,]
-
-fit.tree = rpart(poisonous ~ ., data=no_veil.train, method = "class", cp=0.04)
-
-rpart.plot(fit.tree)
-
-pred.tree = predict(fit.tree, poison.test, type = "class")
-
-m3 <- glm(poisonous ~ ., 
-          data = no_veil.train,
-          family = "binomial")
-m3_aug <- augment(m3)
-
-m3_aug <- m3_aug %>% 
-  mutate(prob = exp(.fitted)/(1 + exp(.fitted)),
-         pred_pois = ifelse(prob > 0.5, "Poisonous", "Edible")) %>% 
-  select(.fitted, prob, pred_pois, poisonous)
-
-table(pred.tree, m3_aug$poisonous)
-table(m3_aug$poisonous)
-
+m2_aug %>% 
+  roc_auc(
+    truth = as.factor(poisonous),
+    prob, 
+    event_level = "second"
+  )
 
 ```
+
+Evident by both the table and ROC curve, our model can perfectly predict a mushroom's edibility. Consequently, the model's sensitivity, specificity, positive predictive value, and negative predictive value are all 1. 
+
+
+# Discussion
+It is likely that our model has 'perfect' predicting power due to the sheer number of predictors and characteristics where each mushroom essentially is unique. Given this, there is reason to believe that by knowing a mushroom's physical characteristics, you can determine whether or not the mushrooms is poisonous or edible. There are, however, limitations to the conclusiosn that our model can make. For one, as discussed earlier the independence assumption for our data set is likely violated due to the fact that the mushrooms are all generated based on 23 species of real mushrooms. Given this, if mushrooms based off the same species have similar characterstic and have the same edibility, then this makes it extremely easy to predict the edibility of mushrooms in our dataset, and our model is more using the species of mushroom as a predictor as opposed to its specific physical characteristics. The fact that the data set only represents 23 species of mushrooms when there are believed to be over 27,000 species in total also makes our model not generalization to predict the edibility of all mushrooms. 
+
+Ideas for future work include further using a larger data set that either includes real mushrooms (as opposed to hypothetical ones) and more importantly a much wider range of mushroom species. If someone were truly wanting to reliably predict mushroom edibility with a model, they'd probably want a well-trained one. Using training and testing subsets would also be a way to test future models, to more accurately test the model with data that it does not have direct information on from the model creation process. 
 
 
 
