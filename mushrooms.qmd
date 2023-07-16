@@ -10,6 +10,8 @@ The primary goal of this project is to best predict whether or not a mushroom is
 
 Some light data cleaning was done, including just changing the "poisonous" variable from p/e to 1/0 for ease of fitting with models like logistic regression models. The veil-type variable was removed because all mushrooms in the data set had the same characteristic for this attribute. 
 
+
+
      1. cap-shape:                bell=b,conical=c,convex=x,flat=f, knobbed=k,sunken=s
      2. cap-surface:              fibrous=f,grooves=g,scaly=y,smooth=s
      3. cap-color:                brown=n,buff=b,cinnamon=c,gray=g,green=r,   
@@ -45,30 +47,85 @@ Some light data cleaning was done, including just changing the "poisonous" varia
 
 *Citations* Mushroom. (1987). UCI Machine Learning Repository. https://doi.org/10.24432/C5959T.
 
-```{r eda, warning = F, message = F}
+Certain variables appear to be much more indicative of mushroom edibility than others. 
+```{r read-data, warning = F, message = F}
 
 library(ggplot2)
 mushrooms <- read.csv("Mushrooms - Sheet1.csv")
-no_veil <- subset(mushrooms, select = -c(veil))
-no_veil$poisonous[no_veil$poisonous == 'p'] <- 1
-no_veil$poisonous[no_veil$poisonous == 'e'] <- 0
+mushrooms$poisonous[mushrooms$poisonous == 'p'] <- 'Poisonous'
+mushrooms$poisonous[mushrooms$poisonous == 'e'] <- 'Edible'
 
+no_veil <- subset(mushrooms, select = -c(veil))
+no_veil$poisonous[no_veil$poisonous == 'Poisonous'] <- 1
+no_veil$poisonous[no_veil$poisonous == 'Edible'] <- 0
 no_veil$poisonous <- as.numeric((no_veil$poisonous))
 
-tbl <- with(no_veil, table(bruises, poisonous))
+```
+```{r eda, warning = F, message = F}
 
+table(no_veil$poisonous)
+
+```
+
+Roughly half (48.2%) of the mushrooms in the data set are poisonous, providing motivation for our model as otherwise the chances of predicting correctly would be roughly a 50/50 draw.
+
+Certain variables are much more indicative of mushroom edibility than others.
+
+```{r eda2, warning = F, message = F}
+
+odor <- with(mushrooms, table(odor, poisonous))
+ggplot(as.data.frame(odor), aes(factor(poisonous), Freq, fill = odor)) +     
+  geom_col(position = 'dodge') + 
+  labs(title = "Mushroom Edibility By Odor", x="Edibility",y="Frequency")
+```
+almond=a 
+creosote=c
+foul=f
+anise=l
+musty=m
+none=n
+pungent=p
+spicy=s
+fishy=y
+                            
+Mushrooms with an almond, anise and no odor are nearly all edible, while mushrooms smelling of creosote, foul, pungent, spicy, or fishy are nearly all poisonous, making odor a pretty good solo predictor of edibility.
+
+```{r eda3, warning= F, message =F}
+spore <- with(mushrooms, table(spore.color, poisonous))
+
+ggplot(as.data.frame(spore), aes(factor(poisonous), Freq, fill = spore.color)) +     
+  geom_col(position = 'dodge') +
+  labs(title="Mushroom Edibility by Spore Color", x="Edibility",y="Frequency")
+```
+
+buff=b
+chocolate=h
+black=k
+brown=n
+orange=o
+green=r
+purple=u
+white=w
+yellow=y
+
+Similarly spore color is also a decent solo predictor of edibility. Mushrooms with buff, black, brown, orange, purple, and yellow spores are mostly edible while mushrooms with chocolate, green,and white spores are mostly poisonous.
+
+```{r eda4, warning = F, message = F}
+tbl3 <- with(mushrooms, table(gill.spacing, poisonous))
+ggplot(as.data.frame(tbl3), aes(factor(poisonous), Freq, fill = gill.spacing)) +     
+  geom_col(position = 'dodge') +
+  labs(title="Mushroom Edibility by Gill Spacing", x = "Edibility", y="Frequency")
+```
+close=c
+crowded=w
+
+While odor and spore color are both pretty good predictors of edibility all around, other variables like gill spacing were only edibility indicators for one of the levels. That is, mushrooms with wide gill spacing are a good indicator that a mushroom is edible, but knowing that a mushroom has close gill spacing is not really indicitive of the mushroom's edibility. 
+
+
+tbl <- with(mushrooms, table(bruises, poisonous))
 ggplot(as.data.frame(tbl), aes(factor(poisonous), Freq, fill = bruises)) +     
   geom_col(position = 'dodge')
 
-tbl2 <- with(no_veil, table(odor, poisonous))
-
-ggplot(as.data.frame(tbl2), aes(factor(poisonous), Freq, fill = odor)) +     
-  geom_col(position = 'dodge')
-
-tbl3 <- with(no_veil, table(gill.spacing, poisonous))
-
-ggplot(as.data.frame(tbl3), aes(factor(poisonous), Freq, fill = gill.spacing)) +     
-  geom_col(position = 'dodge')
 
 tbl4 <- with(no_veil, table(gill.size, poisonous))
 
@@ -85,11 +142,7 @@ tbl6 <- with(no_veil, table(ss.above, poisonous))
 ggplot(as.data.frame(tbl6), aes(factor(poisonous), Freq, fill = ss.above)) +     
   geom_col(position = 'dodge')
 
-tbl7 <- with(no_veil, table(spore.color, poisonous))
 
-ggplot(as.data.frame(tbl7), aes(factor(poisonous), Freq, fill = spore.color)) +     
-  geom_col(position = 'dodge')
-```
 
 # Methodology
 
@@ -105,7 +158,7 @@ On the other hand, the log-odds model was able to predict mushroom edibility wit
 
 The following is our final logistical regression model that uses all variables in the data set as predictors (besides the veil-type variable, which as mentioned all mushrooms had the same characteristic for). 
 
-```{r read-data, warning = F, message = F}
+```{r load-libraries, warning = F, message = F}
 
 
 library(tidymodels)
